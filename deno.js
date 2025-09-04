@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { decode as base64Decode, encode as base64Encode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 
-// ... [此处省略了未作修改的接口定义和函数，与您提供的代码相同] ...
 interface UserInfo {
   rt: string;
   user_id: string;
@@ -46,20 +45,20 @@ const modelCache: Map<string, any> = new Map();
 
 const Hr = {
   r: [87, 78, 72, 56, 79, 48, 122, 79, 107, 104, 82, 119, 51, 100, 78, 90, 85, 85, 69, 107, 90, 116, 87, 48, 108,
-     53, 83, 84, 70, 81, 121, 69],
+      53, 83, 84, 70, 81, 121, 69],
   m: [27, 26, 25, 22, 24, 21, 17, 12, 30, 19, 20, 14, 31, 8, 18, 10, 13, 5, 29, 7, 16, 6, 28, 23, 9, 15, 4, 0, 11,
-     2, 3, 1]
+      2, 3, 1]
 };
 
 const jr = {
   r: [87, 90, 109, 107, 53, 105, 81, 89, 103, 107, 68, 49, 68, 105, 106, 77, 49, 106, 53, 78, 77, 78, 106, 106, 61,
-     77, 89, 51, 66, 79, 86, 89, 106, 65, 106, 52, 89, 77, 87, 106, 89, 122, 78, 90, 65, 89, 50, 105, 61, 90, 106,
-     66, 48, 53, 71, 89, 87, 52, 81, 84, 78, 90, 74, 78, 103, 50, 70, 79, 51, 50, 50, 77, 122, 108, 84, 81, 120,
-     90, 89, 89, 89, 79, 119, 122, 121, 108, 69, 77],
+      77, 89, 51, 66, 79, 86, 89, 106, 65, 106, 52, 89, 77, 87, 106, 89, 122, 78, 90, 65, 89, 50, 105, 61, 90, 106,
+      66, 48, 53, 71, 89, 87, 52, 81, 84, 78, 90, 74, 78, 103, 50, 70, 79, 51, 50, 50, 77, 122, 108, 84, 81, 120,
+      90, 89, 89, 89, 79, 119, 122, 121, 108, 69, 77],
   m: [65, 20, 1, 6, 31, 63, 74, 12, 85, 78, 33, 3, 41, 19, 45, 52, 75, 21, 23, 16, 56, 36, 5, 71, 87, 68, 72, 15,
-     18, 32, 82, 8, 17, 54, 83, 35, 28, 48, 49, 77, 30, 25, 10, 38, 22, 50, 29, 11, 86, 64, 57, 70, 47, 67, 81, 44,
-     61, 7, 58, 13, 84, 76, 42, 24, 46, 37, 62, 80, 27, 51, 73, 34, 69, 39, 53, 2, 79, 60, 26, 0, 66, 40, 55, 9,
-     59, 43, 14, 4]
+      18, 32, 82, 8, 17, 54, 83, 35, 28, 48, 49, 77, 30, 25, 10, 38, 22, 50, 29, 11, 86, 64, 57, 70, 47, 67, 81, 44,
+      61, 7, 58, 13, 84, 76, 42, 24, 46, 37, 62, 80, 27, 51, 73, 34, 69, 39, 53, 2, 79, 60, 26, 0, 66, 40, 55, 9,
+      59, 43, 14, 4]
 };
 
 async function pbkdf2(password: string, salt: Uint8Array, iterations: number, keyLen: number): Promise<Uint8Array> {
@@ -70,7 +69,7 @@ async function pbkdf2(password: string, salt: Uint8Array, iterations: number, ke
     false,
     ["deriveBits"]
   );
-
+  
   const derivedBits = await crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
@@ -81,7 +80,7 @@ async function pbkdf2(password: string, salt: Uint8Array, iterations: number, ke
     key,
     keyLen * 8
   );
-
+  
   return new Uint8Array(derivedBits);
 }
 
@@ -109,27 +108,27 @@ async function Th(n: string): Promise<Uint8Array> {
 async function kh(n: { userId: string; clientUUID: string }, fixedIv?: Uint8Array): Promise<string> {
   const e = await Th(n.userId);
   const t = fixedIv || crypto.getRandomValues(new Uint8Array(16));
-
+  
   const data = {
     ...n,
     apiKey: Fl(jr.r, jr.m)
   };
-
+  
   const jsonStr = JSON.stringify(data);
   const jsonBytes = new TextEncoder().encode(jsonStr);
-
+  
   // PKCS7 padding
   const padLen = 16 - (jsonBytes.length % 16);
   const paddedData = new Uint8Array(jsonBytes.length + padLen);
   paddedData.set(jsonBytes);
   paddedData.fill(padLen, jsonBytes.length);
-
+  
   const key = await crypto.subtle.importKey("raw", e, { name: "AES-CBC" }, false, ["encrypt"]);
   const encrypted = await crypto.subtle.encrypt({ name: "AES-CBC", iv: t }, key, paddedData);
-
+  
   const tHex = Array.from(t).map(b => b.toString(16).padStart(2, '0')).join('');
   const encryptedHex = Array.from(new Uint8Array(encrypted)).map(b => b.toString(16).padStart(2, '0')).join('');
-
+  
   return `${tHex}:${encryptedHex}`;
 }
 
@@ -146,10 +145,10 @@ async function getIdentifier(userId: string, clientUUID: string, fixedIv?: Uint8
 // 登录功能
 async function login(code: string): Promise<UserInfo> {
   console.log("开始登录流程...");
-
+  
   const chromeDeviceId = crypto.randomUUID();
   const deviceId = crypto.randomUUID();
-
+  
   // 第一步：交换code获取tokens
   const exchangeResponse = await fetch(`${HIGHLIGHT_BASE_URL}/api/v1/auth/exchange`, {
     method: 'POST',
@@ -161,11 +160,11 @@ async function login(code: string): Promise<UserInfo> {
       amplitudeDeviceId: chromeDeviceId,
     }),
   });
-
+  
   if (!exchangeResponse.ok) {
     const errorText = await exchangeResponse.text();
     console.error(`HTTP错误: ${exchangeResponse.status} ${errorText}`);
-
+    
     if (exchangeResponse.status === 500) {
       throw new Error("服务器内部错误，请稍后重试");
     } else if (exchangeResponse.status === 400) {
@@ -174,14 +173,14 @@ async function login(code: string): Promise<UserInfo> {
       throw new Error(`登录服务暂时不可用 (错误代码: ${exchangeResponse.status})`);
     }
   }
-
+  
   const exchangeData = await exchangeResponse.json();
   if (!exchangeData.success) {
     console.error(`登录失败详情:`, exchangeData);
-
+    
     // 友好的错误消息映射
     const errorMessage = exchangeData.error || "未知错误";
-
+    
     if (errorMessage.includes("expired") || errorMessage.includes("invalid")) {
       throw new Error("授权代码已过期或无效。授权代码只能使用一次，请重新登录获取新的代码。");
     } else if (errorMessage.includes("not found")) {
@@ -194,10 +193,10 @@ async function login(code: string): Promise<UserInfo> {
       throw new Error(`登录失败: ${errorMessage}。如果问题持续存在，请重新获取授权代码。`);
     }
   }
-
+  
   const accessToken = exchangeData.data.accessToken;
   const refreshToken = exchangeData.data.refreshToken;
-
+  
   // 第二步：注册客户端
   const clientResponse = await fetch(`${HIGHLIGHT_BASE_URL}/api/v1/users/me/client`, {
     method: 'POST',
@@ -209,43 +208,43 @@ async function login(code: string): Promise<UserInfo> {
       client_uuid: deviceId,
     }),
   });
-
+  
   if (!clientResponse.ok) {
     console.warn(`客户端注册失败: ${clientResponse.status}，但继续进行...`);
   }
-
+  
   // 第三步：获取用户信息
   const profileResponse = await fetch(`${HIGHLIGHT_BASE_URL}/api/v1/auth/profile`, {
     headers: {
       'Authorization': `Bearer ${accessToken}`,
     },
   });
-
+  
   if (!profileResponse.ok) {
     const errorText = await profileResponse.text();
     console.error(`获取用户信息失败: ${profileResponse.status} ${errorText}`);
     throw new Error(`无法获取用户信息，请重试。如果问题持续存在，请重新登录。`);
   }
-
+  
   const profileData = await profileResponse.json();
   const userId = profileData.id;
   const email = profileData.email;
-
+  
   console.log(`登录成功: ${userId} ${email}`);
-
+  
   const userInfo: UserInfo = {
     rt: refreshToken,
     user_id: userId,
     email: email,
     client_uuid: deviceId,
   };
-
+  
   // 生成API Key
   const apiKey = base64Encode(new TextEncoder().encode(JSON.stringify(userInfo)));
   console.log("----API KEY----");
   console.log(apiKey);
   console.log("----API KEY----");
-
+  
   return userInfo;
 }
 
@@ -263,13 +262,13 @@ function parseJwtPayload(jwtToken: string): any | null {
   try {
     const parts = jwtToken.split(".");
     if (parts.length !== 3) return null;
-
+    
     let payload = parts[1];
     const padding = payload.length % 4;
     if (padding) {
       payload += "=".repeat(4 - padding);
     }
-
+    
     const decoded = new TextDecoder().decode(base64Decode(payload));
     return JSON.parse(decoded);
   } catch {
@@ -285,36 +284,36 @@ async function refreshAccessToken(rt: string): Promise<string> {
     },
     body: JSON.stringify({ refreshToken: rt }),
   });
-
+  
   if (!response.ok) {
     throw new Error("无法刷新access token");
   }
-
+  
   const respJson = await response.json();
   if (!respJson.success) {
     throw new Error("刷新access token失败");
   }
-
+  
   const newAccessToken = respJson.data.accessToken;
   const payload = parseJwtPayload(newAccessToken);
   const expiresAt = payload?.exp || Math.floor(Date.now() / 1000) + 3600;
-
+  
   accessTokens.set(rt, {
     access_token: newAccessToken,
     expires_at: expiresAt,
   });
-
+  
   return newAccessToken;
 }
 
 async function getAccessToken(rt: string): Promise<string> {
   const tokenInfo = accessTokens.get(rt);
   const currentTime = Math.floor(Date.now() / 1000);
-
+  
   if (tokenInfo && tokenInfo.expires_at > currentTime + 60) {
     return tokenInfo.access_token;
   }
-
+  
   return await refreshAccessToken(rt);
 }
 
@@ -325,16 +324,16 @@ async function fetchModelsFromUpstream(accessToken: string): Promise<void> {
       'User-Agent': USER_AGENT,
     },
   });
-
+  
   if (!response.ok) {
     throw new Error("获取模型列表失败");
   }
-
+  
   const respJson = await response.json();
   if (!respJson.success) {
     throw new Error("获取模型数据失败");
   }
-
+  
   modelCache.clear();
   for (const model of respJson.data) {
     modelCache.set(model.name, {
@@ -362,11 +361,11 @@ function getHighlightHeaders(accessToken: string, identifier?: string): Record<s
     "content-type": "application/json",
     "user-agent": USER_AGENT,
   };
-
+  
   if (identifier) {
     headers["identifier"] = identifier;
   }
-
+  
   return headers;
 }
 
@@ -396,7 +395,7 @@ function formatMessagesToPrompt(messages: Message[]): string {
 
 function formatOpenAITools(openaiTools?: OpenAITool[]): any[] {
   if (!openaiTools) return [];
-
+  
   return openaiTools.map(tool => ({
     name: tool.function.name,
     description: tool.function.description,
@@ -404,31 +403,36 @@ function formatOpenAITools(openaiTools?: OpenAITool[]): any[] {
   }));
 }
 
+// CORS 头部生成函数
+function getCorsHeaders(): Record<string, string> {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+    "Access-Control-Max-Age": "86400", // 24小时
+  };
+}
+
+// 处理预检请求
+function handleOptionsRequest(): Response {
+  return new Response(null, {
+    status: 204,
+    headers: getCorsHeaders()
+  });
+}
+
 // HTTP处理函数
 async function handleRequest(request: Request): Promise<Response> {
-  // --- 开始修改 ---
-  // 定义CORS响应头，允许所有域名访问
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, Identifier",
-  };
-
-  // 处理浏览器的预检请求 (preflight request)
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders,
-    });
-  }
-  // --- 结束修改 ---
-
   const url = new URL(request.url);
   const path = url.pathname;
   
+  // 处理预检请求
+  if (request.method === "OPTIONS") {
+    return handleOptionsRequest();
+  }
+
   // 前端页面
   if (path === "/" || path === "/index.html") {
-    // ... [此处省略了前端HTML代码，与您提供的代码相同] ...
     const html = `
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -1158,15 +1162,15 @@ async function handleRequest(request: Request): Promise<Response> {
                 
                 providerModels.forEach(model => {
                     html += \`
-                            <div class="model-item">
-                                <div>
-                                    <div class="model-name">\${model.id}</div>
-                                    <div class="model-provider">\${provider}</div>
-                                </div>
-                                <button onclick="copyModelName('\${model.id}')" class="btn btn-small copy-btn">
-                                    复制
-                                </button>
+                        <div class="model-item">
+                            <div>
+                                <div class="model-name">\${model.id}</div>
+                                <div class="model-provider">\${provider}</div>
                             </div>
+                            <button onclick="copyModelName('\${model.id}')" class="btn btn-small copy-btn">
+                                复制
+                            </button>
+                        </div>
                     \`;
                 });
                 
@@ -1235,8 +1239,11 @@ async function handleRequest(request: Request): Promise<Response> {
 </html>
     `;
     
-    return new Response(html, {
-      headers: { "Content-Type": "text/html; charset=utf-8", ...corsHeaders }
+    return new Response(html, { 
+      headers: { 
+        "Content-Type": "text/html; charset=utf-8",
+        ...getCorsHeaders()
+      }
     });
   }
   
@@ -1246,7 +1253,10 @@ async function handleRequest(request: Request): Promise<Response> {
       status: "healthy",
       timestamp: Math.floor(Date.now() / 1000)
     }), {
-      headers: { "Content-Type": "application/json", ...corsHeaders }
+      headers: { 
+        "Content-Type": "application/json",
+        ...getCorsHeaders()
+      }
     });
   }
   
@@ -1258,18 +1268,27 @@ async function handleRequest(request: Request): Promise<Response> {
       if (!code) {
         return new Response(JSON.stringify({ error: "Missing code parameter" }), {
           status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders }
+          headers: { 
+            "Content-Type": "application/json",
+            ...getCorsHeaders()
+          }
         });
       }
       
       const userInfo = await login(code);
       return new Response(JSON.stringify(userInfo), {
-        headers: { "Content-Type": "application/json", ...corsHeaders }
+        headers: { 
+          "Content-Type": "application/json",
+          ...getCorsHeaders()
+        }
       });
     } catch (error) {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
+        headers: { 
+          "Content-Type": "application/json",
+          ...getCorsHeaders()
+        }
       });
     }
   }
@@ -1279,7 +1298,10 @@ async function handleRequest(request: Request): Promise<Response> {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return new Response(JSON.stringify({ error: "Missing authorization token" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", ...corsHeaders }
+      headers: { 
+        "Content-Type": "application/json",
+        ...getCorsHeaders()
+      }
     });
   }
   
@@ -1288,7 +1310,10 @@ async function handleRequest(request: Request): Promise<Response> {
   if (!userInfo || !userInfo.rt) {
     return new Response(JSON.stringify({ error: "Invalid authorization token" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", ...corsHeaders }
+      headers: { 
+        "Content-Type": "application/json",
+        ...getCorsHeaders()
+      }
     });
   }
   
@@ -1309,12 +1334,18 @@ async function handleRequest(request: Request): Promise<Response> {
         object: "list",
         data: modelList
       }), {
-        headers: { "Content-Type": "application/json", ...corsHeaders }
+        headers: { 
+          "Content-Type": "application/json",
+          ...getCorsHeaders()
+        }
       });
     } catch (error) {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
+        headers: { 
+          "Content-Type": "application/json",
+          ...getCorsHeaders()
+        }
       });
     }
   }
@@ -1327,7 +1358,10 @@ async function handleRequest(request: Request): Promise<Response> {
       if (!userInfo.user_id || !userInfo.client_uuid) {
         return new Response(JSON.stringify({ error: "Invalid authorization token - missing required fields" }), {
           status: 401,
-          headers: { "Content-Type": "application/json", ...corsHeaders }
+          headers: { 
+            "Content-Type": "application/json",
+            ...getCorsHeaders()
+          }
         });
       }
       
@@ -1338,7 +1372,10 @@ async function handleRequest(request: Request): Promise<Response> {
       if (!modelInfo) {
         return new Response(JSON.stringify({ error: `Model '${reqData.model}' not found` }), {
           status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders }
+          headers: { 
+            "Content-Type": "application/json",
+            ...getCorsHeaders()
+          }
         });
       }
       
@@ -1466,7 +1503,7 @@ async function handleRequest(request: Request): Promise<Response> {
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            ...corsHeaders
+            ...getCorsHeaders()
           },
         });
       } else {
@@ -1482,7 +1519,10 @@ async function handleRequest(request: Request): Promise<Response> {
             error: { message: `Highlight API returned status code ${response.status}`, type: "api_error" }
           }), {
             status: response.status,
-            headers: { "Content-Type": "application/json", ...corsHeaders }
+            headers: { 
+              "Content-Type": "application/json",
+              ...getCorsHeaders()
+            }
           });
         }
         
@@ -1533,18 +1573,27 @@ async function handleRequest(request: Request): Promise<Response> {
         };
         
         return new Response(JSON.stringify(responseData), {
-          headers: { "Content-Type": "application/json", ...corsHeaders }
+          headers: { 
+            "Content-Type": "application/json",
+            ...getCorsHeaders()
+          }
         });
       }
     } catch (error) {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
+        headers: { 
+          "Content-Type": "application/json",
+          ...getCorsHeaders()
+        }
       });
     }
   }
   
-  return new Response("Not Found", { status: 404, headers: corsHeaders });
+  return new Response("Not Found", { 
+    status: 404,
+    headers: getCorsHeaders()
+  });
 }
 
 // 主函数
