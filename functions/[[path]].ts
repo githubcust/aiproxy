@@ -555,8 +555,6 @@ async function handleRequest(request) {
     return new Response("Not Found", { status: 404, headers: getCorsHeaders() });
 }
 
-// onRequest is the entry point for Cloudflare Pages Functions
-export async function onRequest(context) {
-  // context contains: request, env, params, waitUntil, next, data
-  return handleRequest(context.request);
-}
+export default {
+    fetch: handleRequest
+};
