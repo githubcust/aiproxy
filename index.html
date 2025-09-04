@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI API 代理服务</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .description {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        .api-list {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 40px;
+        }
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .api-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .usage {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+        }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .endpoint {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI API 代理服务</h1>
+        <p class="description">
+            统一的 AI API 代理服务，支持多个主流 AI 服务商的 API 访问
+        </p>
+        
+        <div class="api-list">
+            <h2>支持的服务</h2>
+            <div class="api-grid">
+                <div class="api-item">OpenAI</div>
+                <div class="api-item">Claude</div>
+                <div class="api-item">Gemini</div>
+                <div class="api-item">Groq</div>
+                <div class="api-item">xAI</div>
+                <div class="api-item">Cohere</div>
+                <div class="api-item">HuggingFace</div>
+                <div class="api-item">Together</div>
+                <div class="api-item">Novita</div>
+                <div class="api-item">OpenRouter</div>
+                <div class="api-item">SiliconFlow</div>
+                <div class="api-item">ModelScope</div>
+            </div>
+        </div>
+
+        <div class="usage">
+            <h2>使用方法</h2>
+            <p>使用以下格式访问 API：</p>
+            <div class="endpoint">
+                https://your-domain.pages.dev/api/{service}/{path}
+            </div>
+            
+            <h3>示例：</h3>
+            <div class="endpoint">
+                # OpenAI GPT API
+                POST https://your-domain.pages.dev/api/openai/v1/chat/completions
+            </div>
+            <div class="endpoint">
+                # Claude API
+                POST https://your-domain.pages.dev/api/claude/v1/messages
+            </div>
+            <div class="endpoint">
+                # Gemini API
+                POST https://your-domain.pages.dev/api/gemini/v1beta/models/gemini-pro:generateContent
+            </div>
+            
+            <p><strong>注意：</strong> 请确保在请求头中包含相应的 API Key 和必要的认证信息。</p>
+        </div>
+    </div>
+</body>
+</html>
