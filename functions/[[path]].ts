@@ -208,6 +208,14 @@ function getHighlightHeaders(accessToken, identifier) {
         "authorization": `Bearer ${accessToken}`,
         "content-type": "application/json",
         "user-agent": USER_AGENT,
+        "origin": "https://highlightai.com",
+        "referer": "https://highlightai.com/",
+        "sec-ch-ua": '"Chromium";v="132", "Google Chrome";v="132", "Not:A-Brand";v="99"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
     };
     if (identifier) headers["identifier"] = identifier;
     return headers;
