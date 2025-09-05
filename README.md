@@ -11,16 +11,7 @@
 - 实时健康检查和状态监控
 - 可视化监控面板
 
-## 部署方法
-
-### 使用 Wrangler CLI
-```bash
-npm install
-wrangler auth login  
-npm run deploy
-```
-
-### 使用 Cloudflare Dashboard
+## 使用 Cloudflare Dashboard 部署
 连接 Git 仓库到 Cloudflare Pages，设置构建输出目录为 `.`
 
 ## 使用方法
