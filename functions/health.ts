@@ -60,6 +60,12 @@ const healthCheckServices: ServiceCheck[] = [
     host: 'api.cohere.ai',
     testEndpoint: '/v1/models',
     timeout: 5000
+  },
+  {
+    name: 'Light2API',
+    alias: 'light2api',
+    host: 'light2api.deno.dev',
+    timeout: 5000
   }
 ];
 
@@ -101,12 +107,20 @@ async function checkServiceHealth(service: ServiceCheck): Promise<{
     clearTimeout(timeoutId);
     const responseTime = Date.now() - startTime;
 
-    // 检查响应状态
+    // 检查响应状态 - 优化判断逻辑
     if (response.status === 200 || response.status === 401 || response.status === 403) {
       // 200: 正常, 401/403: 认证问题但服务可达
       return {
         status: 'pass',
         message: `Service accessible (HTTP ${response.status})`,
+        responseTime,
+        lastChecked
+      };
+    } else if (response.status === 404 || response.status === 405) {
+      // 404: 端点不存在但服务在线, 405: 方法不支持但服务可达
+      return {
+        status: 'pass',
+        message: `Service online (HTTP ${response.status})`,
         responseTime,
         lastChecked
       };
