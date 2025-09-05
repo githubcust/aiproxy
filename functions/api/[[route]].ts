@@ -27,7 +27,8 @@ const proxies: Record<string, string> = {
   azureinference: "models.inference.ai.azure.com",
   githubai: "models.github.ai/inference",
   dmxcom: "www.dmxapi.com",
-  dmxcn: "www.dmxapi.cn"
+  dmxcn: "www.dmxapi.cn",
+  light2api: "light2api.deno.dev"
 };
 
 // 2. 增强的 Header 黑名单
