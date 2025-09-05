@@ -5,6 +5,7 @@
 ## 主要功能
 
 - 支持 26个主流 AI 服务（OpenAI、Claude、Gemini、Groq、xAI、Cohere、Light2API 等）
+- 增加deno转发，替换[[route]].ts及health.ts中的deno网址为自己部署的
 - 自动处理 CORS 跨域问题
 - 完整的错误处理和日志记录
 - 实时健康检查和状态监控
