@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI API 代理服务 - 状态监控</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        
+        .status-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-healthy { background: #4CAF50; }
+        .status-warning { background: #FF9800; }
+        .status-unhealthy { background: #F44336; }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .service-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .service-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .service-name {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .service-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .status-pass { background: rgba(76, 175, 80, 0.3); color: #A5D6A7; }
+        .status-warn { background: rgba(255, 152, 0, 0.3); color: #FFD54F; }
+        .status-fail { background: rgba(244, 67, 54, 0.3); color: #EF9A9A; }
+        
+        .service-details {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+        }
+        
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid rgba(244, 67, 54, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .last-updated {
+            text-align: center;
+            margin-top: 30px;
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>服务状态监控</h1>
+            <div class="status-indicator">
+                <div class="status-dot" id="overallStatusDot"></div>
+                <span id="overallStatus">检查中...</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="refreshStatus()" id="refreshBtn">刷新状态</button>
+            <button class="btn" onclick="forceCheck()" id="forceBtn">强制检查</button>
+        </div>
+        
+        <div class="services-grid" id="servicesGrid"></div>
+        
+        <div class="last-updated" id="lastUpdated"></div>
+    </div>
+
+    <script>
+        async function fetchHealthStatus(force = false) {
+            const url = force ? '/health?force=true' : '/health';
+            const response = await fetch(url);
+            const data = await response.json();
+            return data;
+        }
+        
+        function formatResponseTime(time) {
+            if (!time) return 'N/A';
+            if (time < 1000) return `${time}ms`;
+            return `${(time / 1000).toFixed(2)}s`;
+        }
+        
+        function formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString('zh-CN');
+        }
+        
+        function updateOverallStatus(data) {
+            const statusDot = document.getElementById('overallStatusDot');
+            const statusText = document.getElementById('overallStatus');
+            
+            statusDot.className = 'status-dot status-' + data.status.replace('healthy', 'healthy').replace('warning', 'warning').replace('unhealthy', 'unhealthy');
+            
+            const statusMap = {
+                healthy: '系统正常',
+                warning: '部分异常',
+                unhealthy: '系统异常'
+            };
+            
+            statusText.textContent = statusMap[data.status] || '状态未知';
+        }
+        
+        function updateServicesGrid(data) {
+            const servicesGrid = document.getElementById('servicesGrid');
+            
+            const serviceNames = {
+                self: '代理服务本身',
+                openai: 'OpenAI',
+                claude: 'Claude',
+                gemini: 'Gemini',
+                groq: 'Groq',
+                cohere: 'Cohere'
+            };
+            
+            const statusIcons = {
+                pass: '✅',
+                warn: '⚠️',
+                fail: '❌'
+            };
+            
+            servicesGrid.innerHTML = Object.entries(data.checks)
+                .map(([key, check]) => `
+                    <div class="service-card">
+                        <div class="service-header">
+                            <div class="service-name">${serviceNames[key] || key}</div>
+                            <div class="service-status status-${check.status}">
+                                ${statusIcons[check.status]} ${check.status.toUpperCase()}
+                            </div>
+                        </div>
+                        <div class="service-details">
+                            <div><strong>状态:</strong> ${check.message}</div>
+                            ${check.responseTime ? `<div><strong>响应时间:</strong> ${formatResponseTime(check.responseTime)}</div>` : ''}
+                            <div><strong>检查时间:</strong> ${formatTimestamp(check.lastChecked)}</div>
+                        </div>
+                    </div>
+                `).join('');
+        }
+        
+        function updateLastUpdated(timestamp) {
+            const lastUpdated = document.getElementById('lastUpdated');
+            lastUpdated.textContent = `最后更新时间: ${formatTimestamp(timestamp)}`;
+        }
+        
+        function showLoading() {
+            document.getElementById('servicesGrid').innerHTML = '<div class="loading">正在检查服务状态...</div>';
+        }
+        
+        function showError(message) {
+            document.getElementById('servicesGrid').innerHTML = `
+                <div class="error">
+                    <h3>检查失败</h3>
+                    <p>${message}</p>
+                    <button class="btn" onclick="refreshStatus()" style="margin-top: 15px;">重新尝试</button>
+                </div>
+            `;
+        }
+        
+        async function refreshStatus() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = '检查中...';
+            
+            try {
+                showLoading();
+                const data = await fetchHealthStatus();
+                
+                updateOverallStatus(data);
+                updateServicesGrid(data);
+                updateLastUpdated(data.timestamp);
+                
+            } catch (error) {
+                showError(`无法获取服务状态: ${error.message}`);
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '刷新状态';
+            }
+        }
+        
+        async function forceCheck() {
+            const forceBtn = document.getElementById('forceBtn');
+            forceBtn.disabled = true;
+            forceBtn.textContent = '检查中...';
+            
+            try {
+                showLoading();
+                const data = await fetchHealthStatus(true);
+                
+                updateOverallStatus(data);
+                updateServicesGrid(data);
+                updateLastUpdated(data.timestamp);
+                
+            } catch (error) {
+                showError(`强制检查失败: ${error.message}`);
+            } finally {
+                forceBtn.disabled = false;
+                forceBtn.textContent = '强制检查';
+            }
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshStatus();
+            setInterval(refreshStatus, 30000); // 30秒自动刷新
+        });
+    </script>
+</body>
+</html>
