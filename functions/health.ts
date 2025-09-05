@@ -37,12 +37,14 @@ const healthCheckServices: ServiceCheck[] = [
     name: 'Claude',
     alias: 'claude',
     host: 'api.anthropic.com',
+    testEndpoint: '/v1/messages',
     timeout: 5000
   },
   {
     name: 'Gemini',
     alias: 'gemini',
     host: 'generativelanguage.googleapis.com',
+    testEndpoint: '/v1beta/models',
     timeout: 5000
   },
   {
@@ -56,6 +58,7 @@ const healthCheckServices: ServiceCheck[] = [
     name: 'Cohere',
     alias: 'cohere',
     host: 'api.cohere.ai',
+    testEndpoint: '/v1/models',
     timeout: 5000
   }
 ];
@@ -84,8 +87,11 @@ async function checkServiceHealth(service: ServiceCheck): Promise<{
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), service.timeout);
 
+    // 对于某些服务使用 GET 方法而不是 HEAD
+    const method = service.alias === 'cohere' ? 'GET' : 'HEAD';
+    
     const response = await fetch(testUrl, {
-      method: 'HEAD', // 使用 HEAD 方法减少数据传输
+      method: method,
       signal: controller.signal,
       headers: {
         'User-Agent': 'HealthCheck/1.0'
