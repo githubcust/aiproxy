@@ -28,7 +28,8 @@ const proxies: Record<string, string> = {
   githubai: "models.github.ai/inference",
   dmxcom: "www.dmxapi.com",
   dmxcn: "www.dmxapi.cn",
-  light2api: "light2api.deno.dev"
+  light2api: "light2api.deno.dev",
+  google: "accounts.google.com"
 };
 
 // 2. 增强的 Header 黑名单
