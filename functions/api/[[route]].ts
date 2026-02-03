@@ -29,7 +29,7 @@ const proxies: Record<string, string> = {
   dmxcom: "www.dmxapi.com",
   dmxcn: "www.dmxapi.cn",
   light2api: "light2api.deno.dev",
-  google: "accounts.google.com"
+  anyrouter: "anyrouter.top"
 };
 
 // 2. 增强的 Header 黑名单
